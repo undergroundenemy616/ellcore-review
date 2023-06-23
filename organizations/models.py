@@ -1,14 +1,19 @@
 from pydantic import BaseModel
-
+from typing import Optional
+from users.models import Meta
 
 class OrganizationOut(BaseModel):
     id : int
-    name: str | None = None
-    inn: str | None = None
+    name: str
+    inn: str
     # standard_token: str | None = None
     # statistics_token: str | None = None
     # advertizing_token: str | None = None
-    archived: bool | None = False
+    archived: bool
+
+class OrganizationOut2(BaseModel):
+    rows : list[OrganizationOut]
+    meta : Meta
 
 class OrganizationIn(BaseModel):
     name: str
@@ -19,10 +24,9 @@ class OrganizationIn(BaseModel):
     archived: bool | None = False
 
 class OrganizationUpdate(BaseModel):
-    id: int
-    name: str | None = None
-    inn: str | None = None
+    name: Optional[str] | None = None
+    inn: Optional[str] | None = None
     # standard_token: str | None = None
     # statistics_token: str | None = None
     # advertizing_token: str | None = None
-    archived: bool | None = None
+    archived: Optional[bool] | None = None

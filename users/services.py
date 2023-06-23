@@ -1,7 +1,7 @@
 from fastapi import HTTPException, status, Depends
 from users.models import User, UserIn, TokenData
 from databeses import database, db_users
-from users.permissions import PermissionChecker, PermissionValidator
+from users.permissions import PermissionChecker, validate_permissions
 from users.hash import hash
 from fastapi.security import OAuth2PasswordRequestForm
 from config import ACCESS_TOKEN_EXPIRE_MINUTES, SECRET_KEY, ALGORITHM
@@ -13,7 +13,7 @@ import json
 class UserServices:
   async def create_user(self, user: UserIn, current_user : User):
     PermissionChecker(required_permissions=[]).check_permission(current_user.permissions)
-    PermissionValidator().validate_permissions(user.permissions)
+    validate_permissions(user.permissions)
     await self.check_unique(user)
     query = db_users.insert().values(username=user.username,
                                   email=user.email,
@@ -39,11 +39,11 @@ class UserServices:
         raise HTTPException(status_code=404, detail="User not found")
     return res
 
-  async def update_user(self, user: User, current_user : User):
+  async def update_user(self, id, user: User, current_user : User):
     PermissionChecker(required_permissions=[]).check_permission(current_user.permissions)
-    PermissionValidator().validate_permissions(user.permissions)
-    # self.check_unique(user)
-    db = await database.fetch_one(db_users.select().where(db_users.c.id == user.id))
+    # print(user.permissions)
+    validate_permissions(user.permissions)
+    db = await database.fetch_one(db_users.select().where(db_users.c.id == id))
 
     if db == None:
       raise HTTPException(status_code=404, detail="User not found to update")
@@ -59,23 +59,6 @@ class UserServices:
     query = db_users.update().where(db_users.c.id == db["id"]).values(db)
     await database.execute(query)
     return {**db}
-  
-# async def patch_good(good: GoodsIn, current_user : User):
-#   PermissionChecker(required_permissions=["goods.create"]
-#                     ).check_permission(current_user.permissions)
-#   await check_foreign_keys(good)
-#   db = await database.fetch_one(db_goods.select().where(db_goods.c.id == good.id))
-#   if db == None:
-#     raise HTTPException(status_code=404, detail="Good not found to update")
-#   db = (dict(db))
-#   if db.get("article_code") != good.article_code:
-#       await check_unique(good)
-#   for k, v in good.dict().items():
-#       if v != None:
-#         db[k] = v
-#   query = db_goods.update().where(db_goods.c.id == db["id"]).values(db)
-#   await database.execute(query)
-#   return {**db}
 
   async def login_for_access_token(self,
     form_data : OAuth2PasswordRequestForm):  
@@ -92,12 +75,13 @@ class UserServices:
     )
     return {"access_token": access_token, "token_type": "bearer"}
   
-  async def read_user(self, current_user: User, all: bool):
+  async def read_user(self, current_user: User, all: bool,
+                      skip, limit):
     PermissionChecker(required_permissions=[]).check_permission(current_user.permissions)
     if (all):
-      query = db_users.select()
+      query = db_users.select().limit(limit).offset(skip)
     else:
-      query = db_users.select().where(db_users.c.archived == False)
+      query = db_users.select().where(db_users.c.archived == False).limit(limit).offset(skip)
     return await database.fetch_all(query)
 
   def normalize(self, user : UserIn):
@@ -128,10 +112,10 @@ async def get_current_user(token: Annotated[str, Depends(hash().oauth2_scheme)])
 async def get_user(email: str):
     query = "SELECT * FROM users WHERE email = :email"
     result = await database.fetch_one(query=query, values={"email": email})
-    # print(email)
-    # if result == None:
-    #    raise HTTPException(status_code=404, detail="User not found to update")
+    if result == None:
+       raise HTTPException(status_code=404, detail="Wrong email or password")
     temp = dict(result)
+    
     if email in result["email"]:
         temp["permissions"]=json.loads(temp["permissions"])
         return User(**temp)

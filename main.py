@@ -4,6 +4,7 @@ from fastapi import FastAPI
 from users.views import user_router, token_router
 from goods.views import goods_router
 from organizations.views import organization_router
+import uvicorn
 
 app = FastAPI()
 
@@ -19,6 +20,9 @@ app.include_router(user_router)
 app.include_router(token_router)
 app.include_router(organization_router)
 app.include_router(goods_router)
+
+if __name__ == "__main__":
+    uvicorn.run("main:app", host="0.0.0.0", port=8000, reload=True)
 
 # @app.post("/token", response_model=Token)
 # async def login_for_access_token(form_data: Annotated[OAuth2PasswordRequestForm, Depends()]):

@@ -58,14 +58,15 @@ db_goods = Table(
     metadata,
     Column("id", Integer, primary_key=True, unique=True),
     Column("article_wb", VARCHAR(255), nullable=False, unique = True),
-    Column("article_id", Integer, ForeignKey("article.id"), nullable=False),
     Column("manager_id", Integer, ForeignKey("manager.id")),
     Column("zero_cost", NUMERIC),
     Column("average_price", NUMERIC),
     Column("optimal_price", NUMERIC),
+    Column("article_code", VARCHAR(255), nullable=False),
+    Column("article_options", VARCHAR(255), nullable=False),
     Column("organization_id", Integer, ForeignKey("organization.id")),
     Column("category_id", Integer, ForeignKey("category.id"), nullable=False),
-    Column("archived", Boolean, default=False),
+    Column("archived", Boolean, default=False)
 )
 
 db_netcost = Table(
@@ -74,17 +75,6 @@ db_netcost = Table(
     Column("id", Integer, primary_key=True, unique=True),
     Column("goods_id", Integer, ForeignKey("goods.id"), nullable=False),
     Column("value", NUMERIC, nullable=False),
-    # Column('date', DATE, nullable=False), ?
-)
-
-db_article = Table(
-    "article",
-    metadata,
-    Column("id", Integer, primary_key=True, unique=True),
-    Column("article_code", VARCHAR(255), nullable=False),
-    # unique = True ?
-    Column("article_options", VARCHAR(255), nullable=False),
-    UniqueConstraint("article_code", "article_options")
 )
 
 db_goods_size = Table(
@@ -164,12 +154,13 @@ db_goods_report = Table(
 
 metadata.create_all(engine)
 # создание суперпользователя
-s = db_users.select().where(db_users.c.email == "admin")
+s = db_users.select().where(db_users.c.email == "2")
 conn = engine.connect()
 result = conn.execute(s).fetchall()
 if not len(result):
-    ins = db_users.insert().values(username="admin", hashed_password=hash.get_password_hash(hash(), "123"),
-                                disabled=False, permissions = ["admin"], email="admin")
+    ins = db_users.insert().values(username="2", hashed_password=hash.get_password_hash(hash(), "2"),
+                                disabled=False, permissions = [1], email="2")
+    print(ins)
     conn = engine.connect()
     result = conn.execute(ins)
 # создание тестовых данных (все что ниже - удалить)
@@ -191,10 +182,14 @@ if not len(result):
     conn = engine.connect()
     result = conn.execute(ins)
 
-s = db_article.select().where(db_article.c.article_code == "123", db_article.c.article_options == "WB")
+s = db_organization.select().where(db_organization.c.inn == "123")
 conn = engine.connect()
 result = conn.execute(s).fetchall()
 if not len(result):
-    ins = db_article.insert().values(article_code="123", article_options="WB")
+    ins = db_organization.insert().values(name="elcora", inn="123",
+                                          standard_token = "standart_token",
+                                          statistics_token = "statistic_token",
+                                          advertizing_token = "advertizing_token",
+                                          archived = False)
     conn = engine.connect()
     result = conn.execute(ins)
