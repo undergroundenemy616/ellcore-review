@@ -2,6 +2,7 @@ from pydantic import BaseModel
 from typing import Optional
 from users.models import Meta
 
+"""Подобыне комменты в коде - мусор от которого срочно нужно избавиться"""
 class OrganizationOut(BaseModel):
     id : int
     name: str

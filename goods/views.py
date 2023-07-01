@@ -11,6 +11,23 @@ from fastapi import APIRouter
 goods_router = APIRouter(prefix='/goods', tags=['goods'])
 
 
+"""
+FastAPI предоставляет удобный способ добавления документации для ваших API-эндпоинтов прямо в декораторах маршрутов.
+Вы можете использовать параметры, такие как summary, description, response_description, чтобы добавить информацию о 
+конкретном API-маршруте. Вот пример документации для указанного вами роутера:
+
+@goods_router.post("", response_model=GoodsOut,
+                   summary="Create a new good",
+                   description="This endpoint allows for the creation of a new good. It requires authentication and appropriate permissions.",
+                   response_description="The created good")
+async def create_good(good: GoodsIn,
+                      current_user: Annotated[User, Depends(get_current_active_user)]):
+    return await GoodsServices.create_good(good, current_user)
+    
+
+Эта документация будет автоматически отображаться в интерфейсе Swagger UI или ReDoc, предоставляемом FastAPI.
+ Это делает ваш API более понятным для других разработчиков и пользователей, а также помогает в отладке и тестировании.
+"""
 @goods_router.post("", response_model=GoodsOut)
 async def create_good(good: GoodsIn,
                       current_user: Annotated[User, Depends(get_current_active_user)]):

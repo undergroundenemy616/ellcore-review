@@ -1,18 +1,19 @@
 from fastapi import FastAPI
+# дублирование импорта
 from databeses import database
 from fastapi import FastAPI
 from users.views import user_router, token_router
 from goods.views import goods_router
 from organizations.views import organization_router
 import uvicorn
-
+# импорты расставлены не по pep
 app = FastAPI()
 
-@app.on_event("startup")
+@app.on_event("startup") # PEP8 E302
 async def startup():
     await database.connect()
 
-@app.on_event("shutdown")
+@app.on_event("shutdown") # PEP8 E302
 async def shutdown():
     await database.disconnect()
 
@@ -22,7 +23,7 @@ app.include_router(organization_router)
 app.include_router(goods_router)
 
 if __name__ == "__main__":
-    uvicorn.run("main:app", host="0.0.0.0", port=8000, reload=True)
+    uvicorn.run("main:app", host="0.0.0.0", port=8000, reload=True) # Порт лучше вынетси в енву.
 
 # @app.post("/token", response_model=Token)
 # async def login_for_access_token(form_data: Annotated[OAuth2PasswordRequestForm, Depends()]):
